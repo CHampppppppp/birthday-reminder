@@ -1,0 +1,49 @@
+name: Send Birthday Reminders
+
+on:
+  schedule:
+    # Run daily at 9 AM UTC (adjust timezone as needed)
+    - cron: '0 9 * * *'
+  workflow_dispatch: # Allow manual triggering for testing
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send birthday reminders
+        run: |
+          # Get the webhook secret from repository secrets
+          WEBHOOK_SECRET="${{ secrets.REMINDER_WEBHOOK_SECRET }}"
+
+          # Get the deployment URL (adjust for your Vercel deployment)
+          DEPLOYMENT_URL="${{ secrets.VERCEL_DEPLOYMENT_URL }}"
+
+          if [ -z "$WEBHOOK_SECRET" ]; then
+            echo "REMINDER_WEBHOOK_SECRET not configured in repository secrets"
+            exit 1
+          fi
+
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            echo "VERCEL_DEPLOYMENT_URL not configured in repository secrets"
+            exit 1
+          fi
+
+          # Call the send-reminders API
+          RESPONSE=$(curl -s -o response.json -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer $WEBHOOK_SECRET" \
+            -H "Content-Type: application/json" \
+            "$DEPLOYMENT_URL/api/send-reminders")
+
+          if [ "$RESPONSE" -eq 200 ]; then
+            echo "Birthday reminders sent successfully"
+            cat response.json
+          else
+            echo "Failed to send birthday reminders. HTTP status: $RESPONSE"
+            cat response.json
+            exit 1
+          fi
+        env:
+          REMINDER_WEBHOOK_SECRET: ${{ secrets.REMINDER_WEBHOOK_SECRET }}
+          VERCEL_DEPLOYMENT_URL: ${{ secrets.VERCEL_DEPLOYMENT_URL }}
