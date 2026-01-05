@@ -4,6 +4,11 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { PageTransition, FadeIn, SlideIn } from '@/components/PageTransition'
+import { BirthdayDecorations } from '@/components/BirthdayDecorations'
+import { AnimatedCard, AnimatedButton } from '@/components/AnimatedComponents'
+import { showToast } from '@/components/ToastProvider'
 
 interface Friend {
   id: string
@@ -111,10 +116,21 @@ export default function Dashboard() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p>Loading...</p>
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+        <BirthdayDecorations className="opacity-20" />
+        <div className="text-center relative z-10">
+          <motion.div
+            className="birthday-icon mx-auto mb-6"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          />
+          <motion.p
+            className="text-lg font-light"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            Loading your birthday magic...
+          </motion.p>
         </div>
       </div>
     )
@@ -125,88 +141,179 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black">
-      <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <div className="birthday-icon"></div>
-            <h1 className="text-xl font-light">Birthday Reminder</h1>
-          </div>
+    <PageTransition className="min-h-screen relative overflow-hidden">
+      <BirthdayDecorations className="opacity-10" />
 
-          <div className="flex items-center space-x-4">
-            <Link href="/dashboard/friends" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-              Manage Friends
+      {/* Header */}
+      <header className="relative z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 dark:border-gray-800/50">
+        <div className="container mx-auto px-4 py-6 flex justify-between items-center">
+          <FadeIn className="flex items-center space-x-4">
+            <motion.div
+              className="birthday-icon birthday-decoration"
+              whileHover={{ scale: 1.1, rotate: 5 }}
+            />
+            <div>
+              <h1 className="text-2xl font-light tracking-tight">Birthday Reminder</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Dashboard</p>
+            </div>
+          </FadeIn>
+
+          <SlideIn direction="left" delay={0.2} className="flex items-center space-x-6">
+            <Link href="/dashboard/friends">
+              <motion.span
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors duration-200 font-medium"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Manage Friends
+              </motion.span>
             </Link>
-            <Link href="/dashboard/settings" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-              Settings
+            <Link href="/dashboard/settings">
+              <motion.span
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors duration-200 font-medium"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Settings
+              </motion.span>
             </Link>
-            <button
-              onClick={() => signOut({ callbackUrl: '/' })}
-              className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            <motion.button
+              onClick={() => {
+                showToast.success('See you soon! 🎂')
+                signOut({ callbackUrl: '/' })
+              }}
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors duration-200 font-medium"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               Sign Out
-            </button>
-          </div>
+            </motion.button>
+          </SlideIn>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-2xl font-light mb-2">Welcome back, {session.user?.name || 'User'}!</h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Here are the upcoming birthdays you need to remember.
-          </p>
-        </div>
+      <main className="container mx-auto px-4 py-12 relative z-10">
+        <FadeIn delay={0.1} className="text-center mb-12">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <h2 className="text-4xl font-light mb-4 tracking-tight">
+              Welcome back, <span className="text-amber-600 dark:text-amber-400 font-normal">{session.user?.name || 'Friend'}</span>!
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400 leading-relaxed">
+              Here are the upcoming birthdays you need to remember
+            </p>
+          </motion.div>
+        </FadeIn>
 
         {upcomingBirthdays.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="birthday-icon mx-auto mb-4 opacity-50"></div>
-            <h3 className="text-xl font-light mb-2">No upcoming birthdays</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Add some friends to start getting birthday reminders.
+          <motion.div
+            className="text-center py-20"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <motion.div
+              className="birthday-icon mx-auto mb-8 opacity-60"
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <h3 className="text-3xl font-light mb-4 tracking-tight">No upcoming birthdays</h3>
+            <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+              Add some friends to start getting birthday reminders and spread the joy!
             </p>
-            <Link href="/dashboard/friends" className="btn-primary">
-              Add Friends
+            <Link href="/dashboard/friends">
+              <AnimatedButton variant="primary" size="lg" className="px-8 py-4">
+                Add Your First Friend
+              </AnimatedButton>
             </Link>
-          </div>
+          </motion.div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {upcomingBirthdays.map((friend) => {
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {upcomingBirthdays.map((friend, index) => {
               const daysUntil = getDaysUntilBirthday(friend.birthday)
+              const isToday = daysUntil === 0
+
               return (
-                <div key={friend.id} className="card">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-medium">{friend.name}</h3>
-                    <div className="birthday-icon"></div>
+                <AnimatedCard key={friend.id} delay={index * 0.1}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-medium">{friend.name}</h3>
+                    <motion.div
+                      className={`birthday-icon ${isToday ? 'birthday-decoration' : ''}`}
+                      whileHover={{ scale: 1.2, rotate: 10 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    />
                   </div>
 
-                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                    <p>Birthday: {formatBirthday(friend.birthday)}</p>
-                    {daysUntil === 0 ? (
-                      <p className="text-red-600 dark:text-red-400 font-medium">🎂 Today!</p>
-                    ) : (
-                      <p>In {daysUntil} day{daysUntil !== 1 ? 's' : ''}</p>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-500 dark:text-gray-400">Birthday:</span>
+                      <span className="font-medium">{formatBirthday(friend.birthday)}</span>
+                    </div>
+
+                    <motion.div
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                        isToday
+                          ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                          : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+                      }`}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: index * 0.1 + 0.3 }}
+                    >
+                      {isToday ? (
+                        <>
+                          <span className="mr-1">🎂</span>
+                          Today!
+                        </>
+                      ) : (
+                        <>
+                          <span className="mr-1">📅</span>
+                          In {daysUntil} day{daysUntil !== 1 ? 's' : ''}
+                        </>
+                      )}
+                    </motion.div>
+
+                    {friend.email && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-gray-500 dark:text-gray-400">Email:</span>
+                        <span className="font-medium">{friend.email}</span>
+                      </div>
                     )}
-                    {friend.email && <p>Email: {friend.email}</p>}
                   </div>
 
                   {friend.notes && (
-                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{friend.notes}</p>
-                    </div>
+                    <motion.div
+                      className="mt-4 pt-4 border-t border-gray-200/50 dark:border-gray-700/50"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: index * 0.1 + 0.5 }}
+                    >
+                      <p className="text-sm text-gray-600 dark:text-gray-400 italic">"{friend.notes}"</p>
+                    </motion.div>
                   )}
-                </div>
+                </AnimatedCard>
               )
             })}
           </div>
         )}
 
-        <div className="mt-12 text-center">
-          <Link href="/dashboard/friends" className="btn-secondary">
-            Manage All Friends ({friends.length})
-          </Link>
-        </div>
+        <SlideIn direction="up" delay={0.6} className="mt-16 text-center">
+          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50">
+            <h3 className="text-2xl font-light mb-4">Manage Your Friends</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              You have <span className="font-semibold text-amber-600 dark:text-amber-400">{friends.length}</span> friend{friends.length !== 1 ? 's' : ''} in your birthday list
+            </p>
+            <Link href="/dashboard/friends">
+              <AnimatedButton variant="secondary" size="lg" className="px-8 py-4">
+                View All Friends
+              </AnimatedButton>
+            </Link>
+          </div>
+        </SlideIn>
       </main>
-    </div>
+    </PageTransition>
   )
 }
